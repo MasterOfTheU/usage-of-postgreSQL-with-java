@@ -1,0 +1,68 @@
+group 'mpt.org'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'jacoco'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets.test.java.srcDirs = ["src/test"]
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'Main'
+        )
+    }
+}
+
+dependencies {
+    compile group: 'org.json', name: 'json', version: '20171018'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+    compile group: 'postgresql', name: 'postgresql', version: '9.1-901-1.jdbc4'
+    testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+task codeCoverageReport(type: JacocoReport) {
+    def coverageSourceDirs = [
+            'src/main/java',
+    ]
+    executionData = fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    classDirectories = fileTree(dir: "${project.buildDir}/classes/java/main")
+    sourceDirectories = files(coverageSourceDirs)
+
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        html.enabled false
+        csv.enabled false
+    }
+}
+
+codeCoverageReport.dependsOn {
+    subprojects*.task(test)
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
+check.dependsOn jacocoTestReport
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.3'
+}
