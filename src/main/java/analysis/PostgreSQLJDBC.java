@@ -3,7 +3,7 @@ package analysis;
 import java.sql.*;
 
 /**
- * This class provides methods for creating connection to database and CRUD operations.
+ * This class provides methods for creating connection to database and making queries.
  */
 public class PostgreSQLJDBC {
 
