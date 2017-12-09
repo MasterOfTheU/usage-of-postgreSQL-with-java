@@ -7,6 +7,7 @@ import java.util.ArrayList;
  */
 public class RepositoryInfo {
 
+    private long id;
     private String name;
     private String url;
     private String description;
@@ -17,7 +18,8 @@ public class RepositoryInfo {
 
     public RepositoryInfo() {}
 
-    public RepositoryInfo(String name, String url, String description, String language, int amountOfStars) {
+    public RepositoryInfo(long id, String name, String url, String description, String language, int amountOfStars) {
+        this.id = id;
         this.name = name;
         this.url = url;
         this.description = description;
@@ -95,4 +97,11 @@ public class RepositoryInfo {
         return repositoryInfo.toString();
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 }
