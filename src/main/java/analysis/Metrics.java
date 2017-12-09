@@ -51,7 +51,7 @@ public class Metrics {
         runtime.gc();
         long usedMemory = runtime.totalMemory() - runtime.freeMemory();
         System.out.printf("Used memory in megabytes: %f \n", bytesToMegabytes(usedMemory));
-        System.out.printf("The runtime of %s() is %d min\n", methodName, TimeUnit.MILLISECONDS.toMinutes(getExecutionTime()));
+        System.out.printf("The runtime of %s() is %d min %d sec\n", methodName, TimeUnit.MILLISECONDS.toMinutes(getExecutionTime()), TimeUnit.MILLISECONDS.toMinutes(getExecutionTime())/1000);
         return true;
     }
 }
