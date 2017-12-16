@@ -30,5 +30,5 @@ public class RepositoryOwner {
     public void setRepositoryID(long repositoryID) {
         this.repositoryID = repositoryID;
     }
-    
+
 }

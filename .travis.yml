@@ -2,6 +2,8 @@ language: java
 
 install: /bin/true
 
+group: deprecated-2017Q4
+
 jdk:
   - oraclejdk8
 
