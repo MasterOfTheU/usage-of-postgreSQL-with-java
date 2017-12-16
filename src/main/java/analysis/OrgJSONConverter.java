@@ -33,10 +33,11 @@ public class OrgJSONConverter {
     private LinkedHashSet<RepositoryInfo> globalReposSet = new LinkedHashSet<>();
     private LinkedHashSet<ContributorInfo> contributorsSet = new LinkedHashSet<>();
     private LinkedHashSet<RepositoryOwner> ownersSet = new LinkedHashSet<>();
+    private TreeMap<Integer, String> langMap = language.getLanguageMap();
     private int langID = 1;
 
     public TreeMap<Integer, String> getAllLanguages() {
-        return language.getLanguageMap();
+        return langMap;
     }
 
     public LinkedHashSet<User> getAllUsers() {
@@ -72,7 +73,7 @@ public class OrgJSONConverter {
                 repository.setName(items.getJSONObject(i).getString("full_name"));
                 repository.setUrl(items.getJSONObject(i).getString("html_url"));
                 repository.setDescription((items.getJSONObject(i).isNull("description")) ? "No description found." : items.getJSONObject(i).getString("description"));
-                repository.setLanguage((items.getJSONObject(i).isNull("language")) ? "Not specified." : items.getJSONObject(i).getString("language"));
+                repository.setLanguage((items.getJSONObject(i).isNull("language")) ? "Not specified" : items.getJSONObject(i).getString("language"));
                 repository.setAmountOfStars(items.getJSONObject(i).getInt("stargazers_count"));
                 repository.setContributors(getTopContributors(getContributors(items.getJSONObject(i).getString("contributors_url"))));
                 repository.setTotalCommits(getTotalNumberOfCommits(getContributors(items.getJSONObject(i).getString("contributors_url"))));
@@ -89,17 +90,14 @@ public class OrgJSONConverter {
                 repOwner.setRepositoryID(items.getJSONObject(i).getLong("id"));
                 ownersSet.add(repOwner);
 
-                languagesSet.add((items.getJSONObject(i).isNull("language")) ? "Not specified." : items.getJSONObject(i).getString("language"));
+                languagesSet.add((items.getJSONObject(i).isNull("language")) ? "Not specified" : items.getJSONObject(i).getString("language"));
+
                 repCounter++;
                 System.out.printf("%d item analyzed \n", repCounter);
             }
 
-            for (String lang : languagesSet) {
-                if (!(language.getLanguageMap().containsValue(lang))) {
-                    language.setLanguageMap(langID, lang);
-                    langID++;
-                }
-            }
+            writeLanguagesToMap();
+
         }
         return listOfRepos;
     }
@@ -110,7 +108,6 @@ public class OrgJSONConverter {
      * @throws URISyntaxException
      * @throws IOException
      */
-
     public ArrayList<RepositoryInfo> computeMostCommittedRepos(String jsonString) throws URISyntaxException, IOException  {
         if (jsonString.length() == 0) return null;
         JSONObject jsonObject = new JSONObject(jsonString);
@@ -128,7 +125,7 @@ public class OrgJSONConverter {
                 repository.setName(items.getJSONObject(i).getString("full_name"));
                 repository.setUrl(items.getJSONObject(i).getString("html_url"));
                 repository.setDescription((items.getJSONObject(i).isNull("description")) ? "No description." : items.getJSONObject(i).getString("description"));
-                repository.setLanguage((items.getJSONObject(i).isNull("language")) ? "Language is not specified." : items.getJSONObject(i).getString("language"));
+                repository.setLanguage((items.getJSONObject(i).isNull("language")) ? "Not specified" : items.getJSONObject(i).getString("language"));
                 repository.setAmountOfStars(items.getJSONObject(i).getInt("stargazers_count"));
                 repository.setContributors(getTopContributors(getContributors(items.getJSONObject(i).getString("contributors_url"))));
                 repository.setTotalCommits(getTotalNumberOfCommits(getContributors(items.getJSONObject(i).getString("contributors_url"))));
@@ -145,18 +142,13 @@ public class OrgJSONConverter {
                 repOwner.setRepositoryID(items.getJSONObject(i).getLong("id"));
                 ownersSet.add(repOwner);
 
-                languagesSet.add((items.getJSONObject(i).isNull("language")) ? "Not specified." : items.getJSONObject(i).getString("language"));
+                languagesSet.add((items.getJSONObject(i).isNull("language")) ? "Not specified" : items.getJSONObject(i).getString("language"));
 
                 repCounter++;
                 System.out.printf("%d item analyzed \n", repCounter);
             }
 
-            for (String lang: languagesSet) {
-                if (!(language.getLanguageMap().containsValue(lang))) {
-                    language.setLanguageMap(langID, lang);
-                    langID++;
-                }
-            }
+            writeLanguagesToMap();
 
             listOfRepos.sort(Comparator.comparing(RepositoryInfo::getTotalCommits).reversed());
 
@@ -239,6 +231,19 @@ public class OrgJSONConverter {
         assert listOfContributors != null;
         listOfContributors.sort(Comparator.comparing(ContributorInfo::getAmountOfCommits).reversed());
         return listOfContributors;
+    }
+
+    /**
+     * Writes languages from all found repositories to language map that will be inserted to database with language id as key and language name as value.
+     * @see PostgreSQLJDBC#insertLanguages(TreeMap)
+     */
+    private void writeLanguagesToMap() {
+        for (String lang: languagesSet) {
+            if (!(language.getLanguageMap().containsValue(lang))) {
+                language.setLanguageMap(langID, lang);
+                langID++;
+            }
+        }
     }
 
 }
