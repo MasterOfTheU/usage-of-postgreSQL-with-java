@@ -12,9 +12,8 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Objects;
+import java.sql.SQLException;
+import java.util.*;
 
 import static analysis.Metrics.*;
 
@@ -24,6 +23,13 @@ import static analysis.Metrics.*;
 public class GitHubAPI {
     private static final String TOKEN = System.getenv("GIT_TOKEN");
     private URI URI;
+    private OrgJSONConverter orgJSONConverter = new OrgJSONConverter();
+    private TreeMap<Integer, String> languagesMap = orgJSONConverter.getAllLanguages();
+    private LinkedHashSet<User> usersSet = orgJSONConverter.getAllUsers();
+    private LinkedHashSet<RepositoryInfo> reposSet = orgJSONConverter.getAllRepositories();
+    private LinkedHashSet<ContributorInfo> contributorsSet = orgJSONConverter.getAllContributors();
+    private LinkedHashSet<RepositoryOwner> ownersSet = orgJSONConverter.getAllOwners();
+    PostgreSQLJDBC dbConnector = new PostgreSQLJDBC();
 
     public ArrayList<RepositoryInfo> getMostStarredRepos(String sinceYYYYMMDD, String untilYYYYMMDD) {
         startMetrics();
@@ -38,6 +44,7 @@ public class GitHubAPI {
             HttpEntity httpEntity;
             String responseString;
             while (true) {
+                if (pageNumber == 11) break;
                 URI = new URIBuilder()
                         .setScheme("https")
                         .setHost("api.github.com")
@@ -45,7 +52,7 @@ public class GitHubAPI {
                         .setParameter("q", "stars:10000..*")
                         .setParameter("q", "created:" + sinceYYYYMMDD + ".." + untilYYYYMMDD)
                         .setParameter("page", String.valueOf(pageNumber))
-                        .setParameter("per_page", "100")
+                        .setParameter("per_page", "50")
                         .setParameter("sort", "stars")
                         .setParameter("order", "desc")
                         .build();
@@ -62,7 +69,7 @@ public class GitHubAPI {
                 }
                 responseString = EntityUtils.toString(httpEntity);
                 if (Objects.equals(responseString, "[]")) break;
-                listOfStarredRepos = new OrgJSONConverter().computeMostStarredRepos(responseString);
+                listOfStarredRepos = orgJSONConverter.computeMostStarredRepos(responseString);
                 pageNumber++;
             }
             assert listOfStarredRepos != null;
@@ -73,11 +80,11 @@ public class GitHubAPI {
             gatherPerformance(methodName);
             return listOfStarredRepos;
         } catch (JSONException e) {
-            e.getMessage();
+            e.printStackTrace();
         } catch (IOException e) {
-            e.getMessage();
+            e.printStackTrace();
         } catch (URISyntaxException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
         return listOfStarredRepos;
     }
@@ -95,13 +102,14 @@ public class GitHubAPI {
             HttpEntity httpEntity;
             String responseString;
             while (true) {
+                if (pageNumber == 11) break;
                 URI = new URIBuilder()
                         .setScheme("https")
                         .setHost("api.github.com")
                         .setPath("/search/repositories")
                         .setParameter("q", "created:"+sinceYYYYMMDD+".."+untilYYYYMMDD)
                         .setParameter("page", String.valueOf(pageNumber))
-                        .setParameter("per_page", "100")
+                        .setParameter("per_page", "50")
                         .build();
                 httpClient = HttpClients.createDefault();
                 httpGet = new HttpGet(URI);
@@ -116,7 +124,7 @@ public class GitHubAPI {
                 }
                 responseString = EntityUtils.toString(httpEntity);
                 if (Objects.equals(responseString, "[]")) break;
-                listOfCommittedRepos = new OrgJSONConverter().computeMostCommittedRepos(responseString);
+                listOfCommittedRepos = orgJSONConverter.computeMostCommittedRepos(responseString);
                 pageNumber++;
             }
             assert listOfCommittedRepos != null;
@@ -128,16 +136,28 @@ public class GitHubAPI {
             return listOfCommittedRepos;
         }
         catch (JSONException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
         catch (IOException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
         catch (URISyntaxException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
 
         return listOfCommittedRepos;
     }
 
+    /**
+     * Inserts all collected data into database.
+     * @throws SQLException In case that connection was not closed.
+     */
+    public void insertDataToDatabase() throws SQLException {
+        dbConnector.insertLanguages(languagesMap);
+        dbConnector.insertUsers(usersSet);
+        dbConnector.insertRepos(reposSet, languagesMap);
+        dbConnector.insertContributors(contributorsSet);
+        dbConnector.insertOwners(ownersSet);
+        dbConnector.close();
+    }
 }
