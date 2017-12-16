@@ -18,8 +18,4 @@ public class Language {
         this.languageMap.put(key, value);
     }
 
-    @Override
-    public String toString() {
-        return "Languages: " + languageMap.toString();
-    }
 }
