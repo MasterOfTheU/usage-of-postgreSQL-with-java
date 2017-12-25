@@ -1,6 +1,7 @@
 package analysis;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.TreeMap;
@@ -143,5 +144,91 @@ public class PostgreSQLJDBC implements AutoCloseable{
     }
 
     //endregion
+
+    //region Queries
+
+    public void getMostPopularLanguages() {
+        try {
+            String query = "SELECT * FROM (SELECT DISTINCT ON (languages.language)  languages.language, " +
+                    "count(languages.language) FROM repositories " +
+                    "INNER JOIN languages ON repositories.language_id = languages.id " +
+                    "GROUP BY languages.language) languages " +
+                    "ORDER BY COUNT(languages) DESC " +
+                    "LIMIT 10";
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            System.out.println("10 Most popular languages: ");
+            while (rs.next()) {
+                System.out.printf("%s - %d\n", rs.getString("language"), rs.getInt("count"));
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        }
+    }
+
+    public void getMostStarredRepositories() {
+        try {
+            String query = "SELECT repositories.url, repositories.stars_number FROM repositories " +
+                    " GROUP BY repositories.url, repositories.stars_number " +
+                    " ORDER BY cast(repositories.stars_number as bigint) DESC " +
+                    " LIMIT 10";
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            System.out.println("10 Most starred repositories: ");
+            while (rs.next()) {
+                System.out.printf("%s - %d\n", rs.getString("url"), rs.getInt("stars_number"));
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        }
+    }
+
+    //edit query
+
+    public void getRepositoriesWithAssemblyLanguage() {
+        try {
+            String query = "SELECT repositories.url, users.user_name, languages.language FROM repositories, users, repo_owners, languages" +
+                    " WHERE repositories.id = repo_owners.repo_id and" +
+                    " users.id = repo_owners.user_id and" +
+                    " languages.language like 'Assembly' " +
+                    " LIMIT 10";
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            System.out.println("10 repositories with Assembly language: ");
+            while (rs.next()) {
+                System.out.printf("%s - %s - %s\n", rs.getString("url"), rs.getString("user_name"), rs.getString("language"));
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        }
+    }
+
+    //edit query
+
+    public void getMostCommittedRepo() {
+        try {
+            String query = "SELECT users.login,count(repositories.name) FROM (repository_owners " +
+                    "INNER JOIN users ON repository_owners.owner_id = users.user_id)" +
+                    "INNER JOIN repositories ON repository_owners.repo_id = repositories.repo_id " +
+                    "GROUP BY users.login\n" +
+                    "ORDER BY COUNT(repositories.name) DESC " +
+                    "LIMIT 10";
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet rs = preparedStatement.executeQuery();
+            System.out.printf("10 users with most amount of repos");
+            while (rs.next()) {
+                System.out.printf("%s - %s - %d\n", rs.getString("url"), rs.getString("user_name"), rs.getInt("stars_number"));
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        }
+    }
+
+    //endregion
+
 
 }

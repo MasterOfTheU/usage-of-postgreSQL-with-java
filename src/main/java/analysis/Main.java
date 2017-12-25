@@ -7,6 +7,7 @@ public class Main {
 
     public static void main(String[] args) throws SQLException {
         //analyseRepositories();
+        handleQueries();
     }
 
     public static boolean analyseRepositories() throws SQLException {
@@ -44,6 +45,14 @@ public class Main {
         return true;
     }
 
+    public static void handleQueries() throws SQLException {
+        PostgreSQLJDBC dbConnector = new PostgreSQLJDBC();
+        dbConnector.getMostPopularLanguages();
+        dbConnector.getMostStarredRepositories();
+        dbConnector.getRepositoriesWithAssemblyLanguage();
+        dbConnector.getProjectsInSpecifiedLanguage("JavaScript");
+        dbConnector.close();
+    }
 
     private static void printRepositories(ArrayList<ArrayList<RepositoryInfo>> repositories){
         for (ArrayList<RepositoryInfo> rep : repositories) {

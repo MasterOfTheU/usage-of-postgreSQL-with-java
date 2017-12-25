@@ -29,7 +29,7 @@ public class GitHubAPI {
     private LinkedHashSet<RepositoryInfo> reposSet = orgJSONConverter.getAllRepositories();
     private LinkedHashSet<ContributorInfo> contributorsSet = orgJSONConverter.getAllContributors();
     private LinkedHashSet<RepositoryOwner> ownersSet = orgJSONConverter.getAllOwners();
-    PostgreSQLJDBC dbConnector = new PostgreSQLJDBC();
+    private PostgreSQLJDBC dbConnector = new PostgreSQLJDBC();
 
     public ArrayList<RepositoryInfo> getMostStarredRepos(String sinceYYYYMMDD, String untilYYYYMMDD) {
         startMetrics();
