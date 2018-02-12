@@ -50,7 +50,7 @@ public class Main {
         dbConnector.getMostPopularLanguages();
         dbConnector.getMostStarredRepositories();
         dbConnector.getRepositoriesWithAssemblyLanguage();
-        dbConnector.getProjectsInSpecifiedLanguage("JavaScript");
+        //dbConnector.getProjectsInSpecifiedLanguage("JavaScript");
         dbConnector.close();
     }
 

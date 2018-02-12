@@ -1,15 +1,16 @@
 package analysis;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * This class provides methods for creating connection to database and making queries.
  */
-public class PostgreSQLJDBC implements AutoCloseable{
+public class PostgreSQLJDBC implements AutoCloseable {
 
     private static final String URL = "jdbc:postgresql://localhost/GitHubRepData";
     private static final String USERNAME = System.getenv("stpUsername");
@@ -26,8 +27,22 @@ public class PostgreSQLJDBC implements AutoCloseable{
      */
     public void connectToDB() {
         try {
-            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-            System.out.printf("Opened connection on %s\n", URL);
+            Properties prop = new Properties();
+            InputStream input = null;
+            String dburl = "", dbuser = "", dbpassword = "";
+            try {
+                input = new FileInputStream("config.properties");
+                prop.load(input);
+                dburl = prop.getProperty("dburl");
+                dbuser= prop.getProperty("dbuser");
+                dbpassword = prop.getProperty("dbpassword");
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not find config file: " + e.getMessage());
+            } catch (IOException e) {
+                System.out.println("Could not read config file: " + e.getMessage());
+            }
+            connection = DriverManager.getConnection(dburl, dbuser, dbpassword);
+            System.out.printf("Opened connection on %s\n", dburl);
         }
         catch (SQLException e) {
             e.printStackTrace();
@@ -38,7 +53,6 @@ public class PostgreSQLJDBC implements AutoCloseable{
      * Closes connection. In case of success prints out that the connection was closed.
      * @throws SQLException
      */
-
     public void close() throws SQLException {
         connection.close();
         System.out.println("Connection closed.");
@@ -184,7 +198,6 @@ public class PostgreSQLJDBC implements AutoCloseable{
             System.out.println("Error occured while selecting data from database " + e.getMessage());
         }
     }
-
     //edit query
 
     public void getRepositoriesWithAssemblyLanguage() {
@@ -192,7 +205,7 @@ public class PostgreSQLJDBC implements AutoCloseable{
             String query = "SELECT repositories.url, users.user_name, languages.language FROM repositories, users, repo_owners, languages" +
                     " WHERE repositories.id = repo_owners.repo_id and" +
                     " users.id = repo_owners.user_id and" +
-                    " languages.language like 'Assembly' " +
+                    " languages.language = 'Assembly' " +
                     " LIMIT 10";
             preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
