@@ -8,6 +8,6 @@ This repository provides information about GitHub repositories in period from 20
 ![scheme](https://user-images.githubusercontent.com/15348166/36357400-3d528932-1506-11e8-9c22-209c5d259cc5.PNG)
 
 ## Data Files
-- [Most Starred Repositories](https://github.com/MasterOfTheU/usage-of-postgreSQL-with-java/blob/master/most_starred_repos.csv)
-- [Most Popular Languages](https://github.com/MasterOfTheU/usage-of-postgreSQL-with-java/blob/master/languages.csv)
-- [JavaScript Repositories](https://github.com/MasterOfTheU/usage-of-postgreSQL-with-java/blob/master/js_repos.csv)
+- [Most Starred Repositories](most_starred_repos.csv)
+- [Most Popular Languages](languages.csv)
+- [JavaScript Repositories](js_repos.csv)
