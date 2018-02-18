@@ -23,7 +23,9 @@ public class PostgreSQLJDBC implements AutoCloseable {
         try {
             Properties prop = new Properties();
             InputStream input = null;
-            String dburl = "", dbuser = "", dbpassword = "";
+            String dburl = "";
+            String dbuser = "";
+            String dbpassword = "";
             try {
                 input = new FileInputStream("config.properties");
                 prop.load(input);
@@ -214,28 +216,5 @@ public class PostgreSQLJDBC implements AutoCloseable {
         }
     }
 
-    //edit query
-
-/*    public void getMostCommittedRepo() {
-        try {
-            String query = "SELECT users.login,count(repositories.name) FROM (repository_owners " +
-                    "INNER JOIN users ON repository_owners.owner_id = users.user_id)" +
-                    "INNER JOIN repositories ON repository_owners.repo_id = repositories.repo_id " +
-                    "GROUP BY users.login\n" +
-                    "ORDER BY COUNT(repositories.name) DESC " +
-                    "LIMIT 10";
-            preparedStatement = connection.prepareStatement(query);
-            ResultSet rs = preparedStatement.executeQuery();
-            System.out.printf("10 users with most amount of repos");
-            while (rs.next()) {
-                System.out.printf("%s - %s - %d\n", rs.getString("url"), rs.getString("user_name"), rs.getInt("stars_number"));
-            }
-        }
-        catch (SQLException e) {
-            System.out.println("Error occured while selecting data from database " + e.getMessage());
-        }
-    }*/
-
     //endregion
-
 }
