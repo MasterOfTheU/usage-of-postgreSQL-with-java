@@ -8,7 +8,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,7 +26,6 @@ public class GitHubAPI {
     private TreeMap<Integer, String> languagesMap = orgJSONConverter.getAllLanguages();
     private LinkedHashSet<User> usersSet = orgJSONConverter.getAllUsers();
     private LinkedHashSet<RepositoryInfo> reposSet = orgJSONConverter.getAllRepositories();
-    private LinkedHashSet<ContributorInfo> contributorsSet = orgJSONConverter.getAllContributors();
     private LinkedHashSet<RepositoryOwner> ownersSet = orgJSONConverter.getAllOwners();
     private PostgreSQLJDBC dbConnector = new PostgreSQLJDBC();
 
@@ -44,7 +42,7 @@ public class GitHubAPI {
             HttpEntity httpEntity;
             String responseString;
             while (true) {
-                if (pageNumber == 11) break;
+                if (pageNumber == 6) break;
                 URI = new URIBuilder()
                         .setScheme("https")
                         .setHost("api.github.com")
@@ -102,7 +100,7 @@ public class GitHubAPI {
             HttpEntity httpEntity;
             String responseString;
             while (true) {
-                if (pageNumber == 11) break;
+                if (pageNumber == 6) break;
                 URI = new URIBuilder()
                         .setScheme("https")
                         .setHost("api.github.com")
@@ -144,7 +142,6 @@ public class GitHubAPI {
         catch (URISyntaxException e) {
             e.printStackTrace();
         }
-
         return listOfCommittedRepos;
     }
 
@@ -153,10 +150,9 @@ public class GitHubAPI {
      * @throws SQLException In case that connection was not closed.
      */
     public void insertDataToDatabase() throws SQLException {
-        dbConnector.insertLanguages(languagesMap);
         dbConnector.insertUsers(usersSet);
+        dbConnector.insertLanguages(languagesMap);
         dbConnector.insertRepos(reposSet, languagesMap);
-        dbConnector.insertContributors(contributorsSet);
         dbConnector.insertOwners(ownersSet);
         dbConnector.close();
     }

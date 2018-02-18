@@ -31,7 +31,6 @@ public class OrgJSONConverter {
     private LinkedHashSet<String> languagesSet = new LinkedHashSet<>();
     private LinkedHashSet<User> usersSet = new LinkedHashSet<>();
     private LinkedHashSet<RepositoryInfo> globalReposSet = new LinkedHashSet<>();
-    private LinkedHashSet<ContributorInfo> contributorsSet = new LinkedHashSet<>();
     private LinkedHashSet<RepositoryOwner> ownersSet = new LinkedHashSet<>();
     private TreeMap<Integer, String> langMap = language.getLanguageMap();
     private int langID = 1;
@@ -48,15 +47,11 @@ public class OrgJSONConverter {
         return globalReposSet;
     }
 
-    public LinkedHashSet<ContributorInfo> getAllContributors() {
-        return contributorsSet;
-    }
-
     public LinkedHashSet<RepositoryOwner> getAllOwners() {
         return ownersSet;
     }
 
-    public ArrayList<RepositoryInfo> computeMostStarredRepos(String jsonString) throws URISyntaxException, IOException {
+    public ArrayList<RepositoryInfo> computeMostStarredRepos(String jsonString) {
         if (jsonString.length() == 0) return null;
         JSONObject jsonObject = new JSONObject(jsonString);
         RepositoryInfo repository;
@@ -95,9 +90,7 @@ public class OrgJSONConverter {
                 repCounter++;
                 System.out.printf("%d item analyzed \n", repCounter);
             }
-
             writeLanguagesToMap();
-
         }
         return listOfRepos;
     }
@@ -105,10 +98,8 @@ public class OrgJSONConverter {
     /**
      * @param jsonString JSONString that is converted from HttpEntity. String represents an array of repositories that will be converted to Repository objects.
      * @return Returns top 10 repositories by number of commits.
-     * @throws URISyntaxException
-     * @throws IOException
      */
-    public ArrayList<RepositoryInfo> computeMostCommittedRepos(String jsonString) throws URISyntaxException, IOException  {
+    public ArrayList<RepositoryInfo> computeMostCommittedRepos(String jsonString) {
         if (jsonString.length() == 0) return null;
         JSONObject jsonObject = new JSONObject(jsonString);
         RepositoryInfo repository;
@@ -161,7 +152,7 @@ public class OrgJSONConverter {
      * @param listOfContributors Gets the list of all contributors in repository.
      * @return Returns number of commits made by contributors.
      */
-        public int getTotalNumberOfCommits(ArrayList<ContributorInfo> listOfContributors) {
+        private int getTotalNumberOfCommits(ArrayList<ContributorInfo> listOfContributors) {
         int totalNumberOfCommits = 0;
         if (listOfContributors != null) {
             for (int i = 0; i < listOfContributors.size(); i++) {
@@ -214,7 +205,6 @@ public class OrgJSONConverter {
                     contributor.setName(jsonObject.getString("login"));
                     contributor.setAmountOfCommits(jsonObject.getInt("contributions"));
                     listOfContributors.add(contributor);
-                    contributorsSet.add(contributor);
                 }
             } else return null;
         }

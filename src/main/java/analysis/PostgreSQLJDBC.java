@@ -1,9 +1,6 @@
 package analysis;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.sql.*;
 import java.util.*;
 
@@ -12,9 +9,6 @@ import java.util.*;
  */
 public class PostgreSQLJDBC implements AutoCloseable {
 
-    private static final String URL = "jdbc:postgresql://localhost/GitHubRepData";
-    private static final String USERNAME = System.getenv("stpUsername");
-    private static final String PASSWORD = System.getenv("stpPassword");
     private Connection connection;
     private PreparedStatement preparedStatement;
 
@@ -104,7 +98,7 @@ public class PostgreSQLJDBC implements AutoCloseable {
                 for (Map.Entry<Integer, String> entry : languagesMap.entrySet()) {
                     langID = entry.getKey();
                     language = entry.getValue();
-                    if (language == repository.getLanguage()) {
+                    if (language.equals(repository.getLanguage())) {
                         preparedStatement.setInt(5, langID);
                         break;
                     }
@@ -117,29 +111,6 @@ public class PostgreSQLJDBC implements AutoCloseable {
         catch (SQLException e) {
             System.out.println("Error occured while inserting data to 'REPOSITORIES' table" + e.getMessage());
         }
-    }
-
-    public void insertContributors(LinkedHashSet<ContributorInfo> contributorsSet) {
-        try {
-            long id;
-            String name;
-            int amountOfCommits;
-            preparedStatement = connection.prepareStatement(
-                    "INSERT INTO contributors(id, contributor_name, commits_number) VALUES(?,?,?)");
-            for (ContributorInfo contributor : contributorsSet) {
-                id = contributor.getId();
-                name = contributor.getName();
-                amountOfCommits = contributor.getAmountOfCommits();
-                preparedStatement.setLong(1, id);
-                preparedStatement.setString(2, name);
-                preparedStatement.setInt(3, amountOfCommits);
-                preparedStatement.executeUpdate();
-            }
-        }
-        catch (SQLException e) {
-            System.out.println("Error occured while inserting data to 'CONTRIBUTORS' table" + e.getMessage());
-        }
-
     }
 
     public void insertOwners(LinkedHashSet<RepositoryOwner> ownersSet) {
@@ -162,6 +133,8 @@ public class PostgreSQLJDBC implements AutoCloseable {
     //region Queries
 
     public void getMostPopularLanguages() {
+        String filename = "languages.csv";
+
         try {
             String query = "SELECT * FROM (SELECT DISTINCT ON (languages.language)  languages.language, " +
                     "count(languages.language) FROM repositories " +
@@ -171,17 +144,24 @@ public class PostgreSQLJDBC implements AutoCloseable {
                     "LIMIT 10";
             preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
-            System.out.println("10 Most popular languages: ");
-            while (rs.next()) {
-                System.out.printf("%s - %d\n", rs.getString("language"), rs.getInt("count"));
+            FileWriter fileWriter = new FileWriter(filename);
+            try (BufferedWriter out = new BufferedWriter(fileWriter)) {
+                while (rs.next()) {
+                    out.write(rs.getString("language") + ",");
+                    out.write(Integer.toString(rs.getInt("count")));
+                    out.write(System.getProperty("line.separator"));
+                }
             }
-        }
-        catch (SQLException e) {
-            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error occured while writing data into file: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database: " + e.getMessage());
         }
     }
 
-    public void getMostStarredRepositories() {
+        public void getMostStarredRepositories() {
+        String filename = "most_starred_repos.csv";
+
         try {
             String query = "SELECT repositories.url, repositories.stars_number FROM repositories " +
                     " GROUP BY repositories.url, repositories.stars_number " +
@@ -189,39 +169,54 @@ public class PostgreSQLJDBC implements AutoCloseable {
                     " LIMIT 10";
             preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
-            System.out.println("10 Most starred repositories: ");
-            while (rs.next()) {
-                System.out.printf("%s - %d\n", rs.getString("url"), rs.getInt("stars_number"));
+            FileWriter fileWriter = new FileWriter(filename);
+            try (BufferedWriter out = new BufferedWriter(fileWriter)) {
+                while (rs.next()) {
+                    out.write(rs.getString("url") + ",");
+                    out.write(Integer.toString(rs.getInt("stars_number")));
+                    out.write(System.getProperty("line.separator"));
+                }
             }
-        }
-        catch (SQLException e) {
-            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error occured while writing data into file: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database: " + e.getMessage());
         }
     }
     //edit query
 
-    public void getRepositoriesWithAssemblyLanguage() {
+    public void getRepositoriesWithJavaScriptLanguage() {
+        String filename = "js_repos.csv";
+
         try {
-            String query = "SELECT repositories.url, users.user_name, languages.language FROM repositories, users, repo_owners, languages" +
-                    " WHERE repositories.id = repo_owners.repo_id and" +
-                    " users.id = repo_owners.user_id and" +
-                    " languages.language = 'Assembly' " +
-                    " LIMIT 10";
+            String query = "SELECT repositories.url, users.user_name\n" +
+                    "FROM repositories\n" +
+                    "INNER JOIN repo_owners ON repositories.id = repo_owners.repo_id\n" +
+                    "INNER JOIN users ON users.id = repo_owners.user_id\n" +
+                    "INNER JOIN languages ON repositories.language_id = languages.id \n" +
+                    "WHERE languages.language = 'JavaScript'\n" +
+                    "GROUP BY repositories.url, users.user_name\n" +
+                    "LIMIT 10";
             preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
-            System.out.println("10 repositories with Assembly language: ");
-            while (rs.next()) {
-                System.out.printf("%s - %s - %s\n", rs.getString("url"), rs.getString("user_name"), rs.getString("language"));
+            FileWriter fileWriter = new FileWriter(filename);
+            try (BufferedWriter out = new BufferedWriter(fileWriter)) {
+                while (rs.next()) {
+                    out.write(rs.getString("url") + ",");
+                    out.write(rs.getString("user_name"));
+                    out.write(System.getProperty("line.separator"));
+                }
             }
-        }
-        catch (SQLException e) {
-            System.out.println("Error occured while selecting data from database " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error occured while writing data into file: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Error occured while selecting data from database: " + e.getMessage());
         }
     }
 
     //edit query
 
-    public void getMostCommittedRepo() {
+/*    public void getMostCommittedRepo() {
         try {
             String query = "SELECT users.login,count(repositories.name) FROM (repository_owners " +
                     "INNER JOIN users ON repository_owners.owner_id = users.user_id)" +
@@ -239,9 +234,8 @@ public class PostgreSQLJDBC implements AutoCloseable {
         catch (SQLException e) {
             System.out.println("Error occured while selecting data from database " + e.getMessage());
         }
-    }
+    }*/
 
     //endregion
-
 
 }
